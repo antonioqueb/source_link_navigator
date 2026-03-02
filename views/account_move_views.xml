@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_move_form_inherit_source_link" model="ir.ui.view">
+        <field name="name">account.move.form.source.link</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_origin']" position="after">
+                <field name="source_sale_order_ids"
+                       widget="many2many_tags"
+                       invisible="not source_sale_order_ids"
+                       readonly="1"/>
+                <field name="source_purchase_order_ids"
+                       widget="many2many_tags"
+                       invisible="not source_purchase_order_ids"
+                       readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

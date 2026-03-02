@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stock_picking_form_inherit_source_link" model="ir.ui.view">
+        <field name="name">stock.picking.form.source.link</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="source_sale_order_id"
+                       invisible="not source_sale_order_id"
+                       readonly="1"/>
+                <field name="source_purchase_order_id"
+                       invisible="not source_purchase_order_id"
+                       readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
