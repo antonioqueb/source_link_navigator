@@ -17,27 +17,23 @@ class StockPicking(models.Model):
         store=True,
     )
 
-    @api.depends('origin', 'group_id')
+    @api.depends('origin', 'move_ids.sale_line_id', 'move_ids.purchase_line_id')
     def _compute_source_documents(self):
         for record in self:
             sale_order = False
             purchase_order = False
 
-            # Método 1: buscar por grupo de abastecimiento (más confiable)
-            if record.group_id:
-                so = self.env['sale.order'].search(
-                    [('procurement_group_id', '=', record.group_id.id)], limit=1
-                )
-                if so:
-                    sale_order = so.id
-                po = self.env['purchase.order'].search(
-                    [('group_id', '=', record.group_id.id)], limit=1
-                )
-                if po:
-                    purchase_order = po.id
+            # Método 1: desde las líneas de movimiento (más confiable)
+            for move in record.move_ids:
+                if not sale_order and move.sale_line_id:
+                    sale_order = move.sale_line_id.order_id.id
+                if not purchase_order and move.purchase_line_id:
+                    purchase_order = move.purchase_line_id.order_id.id
+                if sale_order and purchase_order:
+                    break
 
             # Método 2: buscar por campo origin
-            if record.origin and not sale_order and not purchase_order:
+            if record.origin and (not sale_order or not purchase_order):
                 refs = [ref.strip() for ref in record.origin.split(',')]
                 for ref in refs:
                     if not sale_order:
@@ -52,20 +48,6 @@ class StockPicking(models.Model):
                         )
                         if po:
                             purchase_order = po.id
-
-            # Método 3: buscar por sale_id en las líneas del move
-            if not sale_order:
-                for move in record.move_ids:
-                    if move.sale_line_id:
-                        sale_order = move.sale_line_id.order_id.id
-                        break
-
-            # Método 4: buscar por purchase_line_id en las líneas del move
-            if not purchase_order:
-                for move in record.move_ids:
-                    if move.purchase_line_id:
-                        purchase_order = move.purchase_line_id.order_id.id
-                        break
 
             record.source_sale_order_id = sale_order
             record.source_purchase_order_id = purchase_order
